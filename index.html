@@ -5,21 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sandbox de Intercepts | Nicolas</title>
 
-  <!--BEGIN QUALTRICS WEBSITE FEEDBACK SNIPPET-->
-
-<script type='text/javascript'>
-
-(function(){var g=function(g){
-
-this.go=function(){var a=document.createElement("script");a.type="text/javascript";a.src=g;document.body&&document.body.appendChild(a)};
-
-this.start=function(){var t=this;"complete"!==document.readyState?window.addEventListener?window.addEventListener("load",function(){t.go()},!1):window.attachEvent&&window.attachEvent("onload",function(){t.go()}):t.go()};};
-
-try{(new g("https://zn1hcax4vw8zhw0y6-supergasbras.siteintercept.qualtrics.com/SIE/?Q_ZID=ZN_1HcaX4vW8zHW0Y6")).start()}catch(i){}})();
-
-</script><div id='ZN_1HcaX4vW8zHW0Y6'><!--DO NOT REMOVE-CONTENTS PLACED HERE--></div>
-
-<!--END WEBSITE FEEDBACK SNIPPET-->
+  <!--BEGIN QUALTRICS WEBSITE FEEDBACK SNIPPET (não altere o conteúdo)-->
+  <script type="text/javascript">
+  (function(){
+    var g=function(g){
+      this.go=function(){
+        var a=document.createElement("script");
+        a.type="text/javascript";
+        a.src=g;
+        document.body && document.body.appendChild(a);
+      };
+      this.start=function(){
+        var t=this;
+        if(document.readyState!=="complete"){
+          if(window.addEventListener){ window.addEventListener("load",function(){t.go()},false); }
+          else if(window.attachEvent){ window.attachEvent("onload",function(){t.go()}); }
+        } else { t.go(); }
+      };
+    };
+    try{ (new g("https://zn1hcax4vw8zhw0y6-supergasbras.siteintercept.qualtrics.com/SIE/?Q_ZID=ZN_1HcaX4vW8zHW0Y6")).start(); }
+    catch(i){}
+  })();
+  </script>
+  <div id="ZN_1HcaX4vW8zHW0Y6"><!--DO NOT REMOVE-CONTENTS PLACED HERE--></div>
+  <!--END WEBSITE FEEDBACK SNIPPET-->
 
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -33,9 +42,10 @@ try{(new g("https://zn1hcax4vw8zhw0y6-supergasbras.siteintercept.qualtrics.com/S
     <section>
       <h2>Testes rápidos</h2>
       <div class="grid">
-        <button id="btn-cta" class="btn">Clique de CTA</button>
-        <a id="link-teste" href="#ancora" class="btn outline">Link de teste</a>
-        <button id="btn-heavy-scroll" class="btn">Gerar conteúdo e rolar</button>
+        <button id="btn-cta" class="btn" data-qa="cta">Clique de CTA</button>
+        <a id="link-teste" href="#ancora" class="btn outline" data-qa="link">Link de teste</a>
+        <button id="btn-heavy-scroll" class="btn" data-qa="scroll">Gerar conteúdo e rolar</button>
+        <button id="btn-force-reval" class="btn outline" title="Se QSI estiver disponível">Forçar reavaliação</button>
       </div>
 
       <div id="log" class="log" aria-live="polite"></div>
@@ -53,47 +63,88 @@ try{(new g("https://zn1hcax4vw8zhw0y6-supergasbras.siteintercept.qualtrics.com/S
   </footer>
 
   <script>
-    // Utilitário de log simples
+    // Log simples
     const log = (msg) => {
       const el = document.getElementById('log');
       const time = new Date().toLocaleTimeString();
       el.insertAdjacentHTML('afterbegin', `<div>[${time}] ${msg}</div>`);
+      console.log('[Sandbox]', msg);
     };
 
-    // Marcadores de evento para você mapear no Qualtrics (ex.: regras por clique via CSS selector)
-    document.getElementById('btn-cta').addEventListener('click', () => {
-      log('Clique no botão CTA');
-      // Se quiser, dispare um customEvent que sua regra possa observar
-      document.dispatchEvent(new CustomEvent('qualtrics-cta-click'));
-    });
-
-    document.getElementById('link-teste').addEventListener('click', () => {
-      log('Clique no link de teste');
-      document.dispatchEvent(new CustomEvent('qualtrics-link-click'));
-    });
-
-    document.getElementById('btn-heavy-scroll').addEventListener('click', () => {
-      const filler = document.getElementById('filler');
-      filler.innerHTML = '';
-      // Gera conteúdo para forçar scroll
-      for (let i = 0; i < 80; i++) {
-        const p = document.createElement('p');
-        p.textContent = `Linha ${i+1} de conteúdo para scroll.`;
-        filler.appendChild(p);
-      }
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      log('Conteúdo gerado e scroll acionado');
-    });
-
-    // Dicas de teste por querystring
-    const qp = new URLSearchParams(location.search);
-    if (qp.get('debug') === '1') {
-      log('Modo debug=1 ativo via querystring');
+    // Eventos de teste
+    function wireTestEvents() {
+      document.getElementById('btn-cta')?.addEventListener('click', () => {
+        log('Clique no botão CTA');
+        document.dispatchEvent(new CustomEvent('qualtrics-cta-click'));
+      });
+      document.getElementById('link-teste')?.addEventListener('click', () => {
+        log('Clique no link de teste');
+        document.dispatchEvent(new CustomEvent('qualtrics-link-click'));
+      });
+      document.getElementById('btn-heavy-scroll')?.addEventListener('click', () => {
+        const filler = document.getElementById('filler');
+        filler.innerHTML = '';
+        for (let i = 0; i < 80; i++) {
+          const p = document.createElement('p');
+          p.textContent = `Linha ${i+1} de conteúdo para scroll.`;
+          filler.appendChild(p);
+        }
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        log('Conteúdo gerado e scroll acionado');
+      });
+      // Se QSI existir, permite reavaliar manualmente
+      document.getElementById('btn-force-reval')?.addEventListener('click', () => {
+        if (window.QSI && QSI.API) {
+          try {
+            QSI.API.unload();
+            QSI.API.load();
+            log('QSI: reavaliação forçada (unload/load).');
+          } catch(e) {
+            log('QSI: erro ao reavaliar.');
+          }
+        } else {
+          log('QSI não detectado. Se estiver usando Digital (feedback.js), ignore este botão.');
+        }
+      });
     }
 
-    // Observação: alguns ambientes Qualtrics permitem forçar avaliação por parâmetros.
-    // Use apenas se seu ambiente tiver isso habilitado.
-    // Ex.: adicionar ?Q_CHL=si na URL pode contornar amostragem (varia por tenant/config).
+    // Aguarda Qualtrics carregar sem acessar QSI prematuramente
+    function waitForQualtrics(maxMs = 15000, interval = 250) {
+      return new Promise((resolve, reject) => {
+        const t0 = performance.now();
+        const timer = setInterval(() => {
+          const hasQSI = !!(window.QSI && window.QSI.API);
+          const hasDigital = !!window.Qualtrics || !!document.querySelector('script[src*="feedback.js"]');
+          if (hasQSI || hasDigital) {
+            clearInterval(timer);
+            resolve({ hasQSI, hasDigital });
+          } else if (performance.now() - t0 > maxMs) {
+            clearInterval(timer);
+            reject(new Error('timeout'));
+          }
+        }, interval);
+      });
+    }
+
+    // Querystring debug
+    function applyDebugFromQuery() {
+      const qp = new URLSearchParams(location.search);
+      if (qp.get('debug') === '1') log('debug=1 ativo');
+      // Tenants que suportam podem usar ?Q_CHL=si para suprimir amostragem
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      wireTestEvents();
+      applyDebugFromQuery();
+
+      try {
+        const info = await waitForQualtrics();
+        if (info.hasQSI) log('QSI detectado. API disponível.');
+        else if (info.hasDigital) log('Digital Website Feedback detectado (feedback.js). Sem objeto QSI.');
+      } catch {
+        log('Qualtrics não carregou. Possível bloqueio de rede/AdBlock ou host indisponível.');
+      }
+    });
   </script>
 </body>
 </html>
