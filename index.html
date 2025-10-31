@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sandbox de Intercepts | Nicolas</title>
+
+  <!-- ===== Cole AQUI o snippet da Qualtrics Website/App Feedback =====
+  Exemplo de marcador para você achar fácil:
+  [QUALTRICS_SNIPPET_AQUI]
+  Coloque exatamente como a Qualtrics fornece (normalmente um <script> que carrega feedback.js / qualtrics.js).
+  ===================================================================== -->
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="wrap">
+    <h1>Sandbox de Intercepts</h1>
+    <p>Página simples para testar regras de targeting, eventos de clique, scroll, tempo na página, etc.</p>
+  </header>
+
+  <main class="wrap">
+    <section>
+      <h2>Testes rápidos</h2>
+      <div class="grid">
+        <button id="btn-cta" class="btn">Clique de CTA</button>
+        <a id="link-teste" href="#ancora" class="btn outline">Link de teste</a>
+        <button id="btn-heavy-scroll" class="btn">Gerar conteúdo e rolar</button>
+      </div>
+
+      <div id="log" class="log" aria-live="polite"></div>
+    </section>
+
+    <section style="margin-top:32px">
+      <h2 id="ancora">Conteúdo longo</h2>
+      <p>Role a página para disparar regras baseadas em % de scroll.</p>
+      <div id="filler"></div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <small>© Nicolas — Página estática para QA de intercepts.</small>
+  </footer>
+
+  <script>
+    // Utilitário de log simples
+    const log = (msg) => {
+      const el = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      el.insertAdjacentHTML('afterbegin', `<div>[${time}] ${msg}</div>`);
+    };
+
+    // Marcadores de evento para você mapear no Qualtrics (ex.: regras por clique via CSS selector)
+    document.getElementById('btn-cta').addEventListener('click', () => {
+      log('Clique no botão CTA');
+      // Se quiser, dispare um customEvent que sua regra possa observar
+      document.dispatchEvent(new CustomEvent('qualtrics-cta-click'));
+    });
+
+    document.getElementById('link-teste').addEventListener('click', () => {
+      log('Clique no link de teste');
+      document.dispatchEvent(new CustomEvent('qualtrics-link-click'));
+    });
+
+    document.getElementById('btn-heavy-scroll').addEventListener('click', () => {
+      const filler = document.getElementById('filler');
+      filler.innerHTML = '';
+      // Gera conteúdo para forçar scroll
+      for (let i = 0; i < 80; i++) {
+        const p = document.createElement('p');
+        p.textContent = `Linha ${i+1} de conteúdo para scroll.`;
+        filler.appendChild(p);
+      }
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      log('Conteúdo gerado e scroll acionado');
+    });
+
+    // Dicas de teste por querystring
+    const qp = new URLSearchParams(location.search);
+    if (qp.get('debug') === '1') {
+      log('Modo debug=1 ativo via querystring');
+    }
+
+    // Observação: alguns ambientes Qualtrics permitem forçar avaliação por parâmetros.
+    // Use apenas se seu ambiente tiver isso habilitado.
+    // Ex.: adicionar ?Q_CHL=si na URL pode contornar amostragem (varia por tenant/config).
+  </script>
+</body>
+</html>
